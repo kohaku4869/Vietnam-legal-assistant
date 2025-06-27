@@ -1,0 +1,14 @@
+fastapi
+uvicorn[standard]
+faiss-cpu
+sentence-transformers
+langchain-experimental
+langchain-huggingface
+langchain-community
+langchain-core
+google-generativeai
+python-dotenv
+pypdf
+google
+typing
+fastapi
