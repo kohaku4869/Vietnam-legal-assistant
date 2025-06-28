@@ -10,8 +10,7 @@ class StrOutputParser(StrOutputParser):
     def parse(self, text: str) -> str:
         return self.extract_answer(text)
 
-    def extract_answer(self, text_response: str,
-                       pattern: str = r"Answer :\s*(.*)") -> str:
+    def extract_answer(self, text_response: str, pattern: str = r"Answer :\s*(.*)") -> str:
         match = re.search(pattern, text_response, re.DOTALL)
         if match:
             return match.group(1).strip()
@@ -24,19 +23,17 @@ class OfflineRAG:
             "Sử dụng thông tin sau để trả lời câu hỏi.\n\nContext:\n{context}\n\nQuestion: {question}"
         )
         self.parser = StrOutputParser()
+        self.chain = self._build_chain()
 
-    def invoke(self, retriever):
+    def _build_chain(self):
         input_data = {
-            "context": RunnableLambda(lambda x: x["question"]) | retriever | self.format_docs,
+            "context": RunnableLambda(self.format_docs),
             "question": RunnablePassthrough()
         }
-        rag_chain = (
-            input_data
-            | self.prompt
-            | self.llm
-            | self.parser
-        )
-        return rag_chain
+        return input_data | self.prompt | self.llm | self.parser
+
+    def invoke(self, docs, question: str):
+        return self.chain.invoke({"context": docs, "question": question})
 
     def format_docs(self, docs):
         return "\n\n".join(doc.page_content for doc in docs)

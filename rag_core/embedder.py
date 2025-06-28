@@ -1,13 +1,13 @@
-from sentence_transformers import SentenceTransformer
+from langchain_huggingface import HuggingFaceEmbeddings
 import numpy as np
 
 class Embedder:
     def __init__(self, model_name: str = "intfloat/multilingual-e5-large"):
-        self.model = SentenceTransformer(model_name)
+        self.embedding = HuggingFaceEmbeddings(model_name=model_name)
 
     def embed_documents(self, texts):
         texts = [f"passage: {t}" for t in texts]
-        return self.model.encode(texts, convert_to_numpy=True)
+        return np.array(self.embedding.embed_documents(texts))
 
     def embed_query(self, query):
-        return self.model.encode([f"query: {query}"], convert_to_numpy=True)[0]
+        return np.array(self.embedding.embed_query(f"query: {query}"))
