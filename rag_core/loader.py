@@ -1,12 +1,10 @@
+# file: rag_core/loader.py
+
 import os
 import glob
 from typing import List
 from langchain_community.document_loaders import PyPDFLoader
 from langchain_core.documents import Document
-
-
-def remove_non_utf8(text: str) -> str:
-    return ''.join(c for c in text if ord(c) < 128 or c == '\n')
 
 
 class Loader:
@@ -23,7 +21,6 @@ class Loader:
         for pdf_path in pdf_files:
             loader = PyPDFLoader(pdf_path)
             for doc in loader.load():
-                doc.page_content = remove_non_utf8(doc.page_content)
                 doc.metadata["category"] = category
                 documents.append(doc)
         return documents
