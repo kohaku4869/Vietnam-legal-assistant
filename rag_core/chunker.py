@@ -5,29 +5,25 @@ from langchain_core.documents import Document
 
 class Chunker:
     """
-    Chia nhỏ văn bản luật theo từng "Điều".
-    Đây là phương pháp hiệu quả cho các văn bản có cấu trúc.
+    Sử dụng phương pháp regex "lookahead" để chia nhỏ văn bản luật theo từng "Điều".
+    Đây là cách mạnh mẽ và đáng tin cậy nhất cho các văn bản có cấu trúc rõ ràng.
     """
 
     def split(self, documents: List[Document]) -> List[Document]:
+        # Gộp nội dung từ tất cả các trang thành một chuỗi văn bản duy nhất
         full_text = "\n".join([doc.page_content for doc in documents])
 
-        # Sử dụng biểu thức chính quy để tìm các "Điều" làm điểm bắt đầu của mỗi chunk.
-        # Mẫu này sẽ tìm "Điều" theo sau là một số và một dấu chấm.
-        chunks_text = re.split(r'(Điều \d+\..*?)\n', full_text, flags=re.DOTALL)
+        # Regex mới: Tách tại vị trí ngay trước "Điều X."
+        # Ký hiệu `(?=...)` là một "positive lookahead", nó tìm vị trí để tách
+        # mà không "ăn" mất chính chuỗi "Điều X.", giúp nó luôn ở đầu mỗi chunk.
+        chunks_text = re.split(r'(?=Điều \d+\.)', full_text)
 
-        # Xử lý kết quả từ re.split để ghép tiêu đề và nội dung
         final_chunks = []
-        for i in range(1, len(chunks_text), 2):
-            # Mỗi chunk sẽ bao gồm tiêu đề (vd: "Điều 81.") và nội dung tiếp theo của nó
-            chunk_content = (chunks_text[i] + chunks_text[i + 1]).strip()
-            if len(chunk_content) > 50:  # Lọc bỏ các chunk quá ngắn hoặc rỗng
-                final_chunks.append(Document(page_content=chunk_content))
-
-        if not final_chunks:
-            # Nếu không chia được theo Điều, dùng cách cũ để dự phòng
-            from langchain.text_splitter import RecursiveCharacterTextSplitter
-            text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=100)
-            return text_splitter.split_documents(documents)
+        for chunk_content in chunks_text:
+            cleaned_chunk = chunk_content.strip()
+            # Chỉ lấy các chunk có nội dung thực sự (dài hơn 50 ký tự) để loại bỏ
+            # các phần rác hoặc phần giới thiệu ngắn ở đầu văn bản.
+            if len(cleaned_chunk) > 50 and cleaned_chunk.startswith("Điều"):
+                final_chunks.append(Document(page_content=cleaned_chunk))
 
         return final_chunks

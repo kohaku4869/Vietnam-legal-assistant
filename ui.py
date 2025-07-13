@@ -2,48 +2,41 @@ import streamlit as st
 import os
 from dotenv import load_dotenv
 
-# Import các thành phần cốt lõi từ dự án của bạn
 from rag_core.loader import Loader
 from rag_core.chunker import Chunker
 from rag_core.embedder import Embedder
 from rag_core.vectorstore import VectorDB
 from rag_core.reranker import Reranker
 from rag_core.llm import GoogleLLMPipeline
-from rag_core.rag_chain import OfflineRAG
+from rag_core.rag_chain import OfflineRAG, MultiQueryChain, KeywordExtractionChain
 from langchain_core.documents import Document
 
-# --- CÀI ĐẶT CHUNG & KHỞI TẠO ---
-
-st.set_page_config(
-    page_title="Trợ lý Pháp lý AI",
-    page_icon="⚖️",
-    layout="centered",
-    initial_sidebar_state="auto"
-)
+st.set_page_config(page_title="Trợ lý Pháp lý AI", page_icon="⚖️", layout="wide")
 
 load_dotenv()
 API_KEY = os.getenv("GOOGLE_API_KEY")
-if not API_KEY:
-    st.error("Vui lòng thiết lập GOOGLE_API_KEY trong file .env của bạn.")
-    st.stop()
 
 
 @st.cache_resource
 def initialize_rag_pipeline():
-    print("--- Đang khởi tạo RAG Pipeline (chỉ chạy một lần) ---")
+    print("--- Đang khởi tạo RAG Pipeline ---")
     loader = Loader(base_path="data")
     chunker = Chunker()
     embedder = Embedder(model_name="intfloat/multilingual-e5-large")
     vector_db = VectorDB(embedder)
-    reranker = Reranker()
+    reranker = Reranker(model_name="BAAI/bge-reranker-large")
     llm = GoogleLLMPipeline(api_key=API_KEY, model_name="gemini-2.5-flash")
-    rag = OfflineRAG(llm=llm)
-    return loader, chunker, vector_db, reranker, rag, embedder
+    rag_chain = OfflineRAG(llm=llm)
+    multi_query_chain = MultiQueryChain(llm=llm)
+    keyword_chain = KeywordExtractionChain(llm=llm)
+    return loader, chunker, vector_db, reranker, rag_chain, multi_query_chain, keyword_chain, embedder
 
 
-loader, chunker, vector_db, reranker, rag, embedder = initialize_rag_pipeline()
+if not API_KEY:
+    st.error("Vui lòng thiết lập GOOGLE_API_KEY trong file .env của bạn.")
+    st.stop()
 
-# --- GIAO DIỆN NGƯỜI DÙNG ---
+loader, chunker, vector_db, reranker, rag_chain, multi_query_chain, keyword_chain, embedder = initialize_rag_pipeline()
 
 st.title("⚖️ Trợ lý Pháp lý AI")
 st.caption("Hỏi đáp các vấn đề pháp lý dựa trên dữ liệu bạn cung cấp.")
@@ -52,27 +45,15 @@ with st.sidebar:
     st.header("Tùy chọn")
     try:
         available_categories = [d for d in os.listdir("data") if os.path.isdir(os.path.join("data", d))]
-        if not available_categories:
-            st.warning("Không tìm thấy thư mục lĩnh vực nào trong 'data'.")
-            st.stop()
     except FileNotFoundError:
-        st.error("Thư mục 'data' không tồn tại. Vui lòng tạo và thêm dữ liệu.")
+        st.error("Thư mục 'data' không tồn tại.")
         st.stop()
 
-    selected_category = st.selectbox(
-        "Chọn lĩnh vực pháp lý:",
-        options=available_categories,
-        index=0
-    )
+    selected_category = st.selectbox("Chọn lĩnh vực pháp lý:", options=available_categories, index=0)
     st.markdown("---")
-    # Thêm nút để xóa lịch sử chat
-    if st.button("Bắt đầu cuộc trò chuyện mới"):
-        st.session_state.messages = [
-            {"role": "assistant", "content": "Chào bạn, tôi có thể giúp gì về vấn đề pháp lý của bạn?"}]
-        st.rerun()  # Tải lại trang để xóa hiển thị
-
-    st.markdown("---")
-    st.info("Ứng dụng này đang trong giai đoạn phát triển.", icon="ℹ️")
+    if st.button("Bắt đầu trò chuyện mới"):
+        st.session_state.clear()
+        st.rerun()
 
 if "messages" not in st.session_state:
     st.session_state.messages = [
@@ -83,36 +64,65 @@ for message in st.session_state.messages:
         st.markdown(message["content"])
 
 if prompt := st.chat_input("Đặt câu hỏi của bạn ở đây..."):
-    # Lấy lịch sử chat TRƯỚC khi thêm tin nhắn mới
-    # Chúng ta chỉ muốn gửi các tin nhắn cũ làm ngữ cảnh
-    chat_history_for_prompt = list(st.session_state.messages)
-
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user"):
         st.markdown(prompt)
 
     with st.chat_message("assistant"):
-        with st.spinner("Vui lòng chờ, tôi đang tìm kiếm và suy nghĩ..."):
+        with st.spinner("Vui lòng chờ, tôi đang thực hiện quy trình tìm kiếm nâng cao..."):
             try:
                 if not vector_db.load(selected_category):
-                    st.info(f"Vector store cho '{selected_category}' chưa có, bắt đầu xây dựng...")
-                    docs = loader.load_category(selected_category)
-                    chunks = chunker.split(docs)
-                    vector_db.build(selected_category, chunks)
-                    st.success(f"Xây dựng vector store cho '{selected_category}' thành công!")
+                    with st.status(f"Bắt đầu xây dựng Vector Store cho '{selected_category}'...",
+                                   expanded=True) as status:
+                        docs = loader.load_category(selected_category);
+                        status.write("Đã tải tài liệu...")
+                        chunks = chunker.split(docs);
+                        status.write("Đã chia nhỏ văn bản...")
+                        vector_db.build(selected_category, chunks);
+                        status.write("Đã xây dựng index...")
+                        status.update(label="Xây dựng hoàn tất!", state="complete")
 
-                q_vec = embedder.embed_query(prompt)
-                candidates = vector_db.query(q_vec, selected_category, top_k=15)
-                reranked_chunks = reranker.rerank(prompt, candidates)[:5]
+                # BƯỚC 1: PHÂN TÍCH CÂU HỎI
+                queries_generated = multi_query_chain.invoke(prompt)
+                all_queries = [prompt] + queries_generated
+                keywords_extracted = keyword_chain.invoke(prompt)
+
+                # BƯỚC 2: TÌM KIẾM LAI (HYBRID SEARCH)
+                # 2.1. Tìm kiếm ngữ nghĩa
+                semantic_candidates = []
+                for q in all_queries:
+                    q_vec = embedder.embed_query(q)
+                    candidates = vector_db.query(q_vec, selected_category, top_k=5)  # Lấy top 5 cho mỗi câu hỏi
+                    semantic_candidates.extend(candidates)
+                # Sàng lọc và chỉ giữ lại khoảng 20 ứng viên ngữ nghĩa tốt nhất
+                semantic_candidates = list(dict.fromkeys(semantic_candidates))[:20]
+
+                # 2.2. Tìm kiếm từ khóa
+                all_texts = vector_db.texts.get(selected_category, [])
+                keyword_candidates = []
+                if keywords_extracted:
+                    for text in all_texts:
+                        if any(keyword.lower() in text.lower() for keyword in keywords_extracted):
+                            keyword_candidates.append(text)
+                # Giới hạn số lượng ứng viên từ khóa để tránh nhiễu
+                keyword_candidates = keyword_candidates[:20]
+
+                # BƯỚC 3: TỔNG HỢP VÀ RERANK
+                combined_candidates = list(dict.fromkeys(semantic_candidates + keyword_candidates))
+
+                with st.expander(f"DEBUG: {len(combined_candidates)} ứng viên được đưa vào Reranker"):
+                    st.json(combined_candidates)
+
+                reranked_chunks = reranker.rerank(prompt, combined_candidates)[:10]
+
+                # ... (phần còn lại của code giữ nguyên) ...
+                with st.expander("DEBUG: Top 10 nguồn thông tin cuối cùng được sử dụng"):
+                    st.json(reranked_chunks)
+
                 reranked_docs = [Document(page_content=txt) for txt in reranked_chunks]
-
-                # THAY ĐỔI QUAN TRỌNG: Gửi lịch sử chat vào hàm invoke
-                answer = rag.invoke(reranked_docs, prompt, chat_history=chat_history_for_prompt)
-
+                chat_history_for_prompt = list(st.session_state.messages[:-1])
+                answer = rag_chain.invoke(reranked_docs, prompt, chat_history=chat_history_for_prompt)
                 st.markdown(answer)
-                with st.expander("Xem các nguồn thông tin đã tham khảo"):
-                    for i, chunk in enumerate(reranked_chunks):
-                        st.info(f"Nguồn {i + 1}:\n\n{chunk}")
 
             except Exception as e:
                 st.error(f"Đã xảy ra lỗi: {e}")
