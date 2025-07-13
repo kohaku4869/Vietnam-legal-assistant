@@ -59,12 +59,12 @@ async def chat_query(req: QueryRequest):
     if not load_result:
         print("DEBUG: Vector store chưa tồn tại hoặc không tải được. Bắt đầu quá trình build.")
         try:
-            # Bước 1: Tải tài liệu
+            # Tải tài liệu
             print("DEBUG: Đang gọi loader.load_category...")
             docs = loader.load_category(category)
             print(f"DEBUG: Tải thành công {len(docs)} tài liệu.")
 
-            # Bước 2: Chia nhỏ tài liệu
+            # Chia nhỏ tài liệu
             print("DEBUG: Đang gọi chunker.split...")
             chunks = chunker.split(docs)
             print(f"DEBUG: Chia thành công thành {len(chunks)} chunks.")
@@ -80,7 +80,6 @@ async def chat_query(req: QueryRequest):
     else:
         print("DEBUG: Đã tải vector store từ file có sẵn. Bỏ qua bước build.")
 
-    # --- TIẾP TỤC XỬ LÝ ---
     print("DEBUG: Đang tạo vector cho câu hỏi...")
     q_vec = embedder.embed_query(req.question)
     print("DEBUG: Đang truy vấn các ứng viên từ VectorDB...")

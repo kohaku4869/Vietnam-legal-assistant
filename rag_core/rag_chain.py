@@ -4,11 +4,9 @@ from langchain_core.runnables import RunnableLambda
 from langchain_core.prompts import PromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 
-# --- CHAIN TRÍCH XUẤT TỪ KHÓA ĐÃ ĐƯỢC NÂNG CẤP ---
 class KeywordExtractionChain:
     def __init__(self, llm):
         self.llm = llm
-        # Prompt mới, chi tiết và có nhiều ví dụ để "dạy" AI
         self.prompt = PromptTemplate.from_template(
             """**Nhiệm vụ:** Bạn là một chuyên gia phân tích và mở rộng truy vấn pháp lý. Nhiệm vụ của bạn là nhận một câu hỏi bằng ngôn ngữ tự nhiên từ người dùng và chuyển đổi nó thành một danh sách các từ khóa và thuật ngữ pháp lý chính xác, có khả năng xuất hiện cao nhất trong các văn bản luật của Việt Nam.
 
@@ -45,9 +43,7 @@ class KeywordExtractionChain:
         keywords = [k.strip() for k in response.split(',') if k.strip()]
         return keywords
 
-# --- Các chain khác giữ nguyên ---
 class MultiQueryChain:
-    # ... (giữ nguyên code cũ) ...
     def __init__(self, llm):
         self.llm = llm
         self.prompt = PromptTemplate.from_template(
@@ -64,7 +60,6 @@ class MultiQueryChain:
         return [q.strip() for q in response.split('\n') if q.strip()]
 
 class OfflineRAG:
-    # ... (giữ nguyên toàn bộ code của lớp này) ...
     def __init__(self, llm):
         self.llm = llm
         self.prompt = PromptTemplate.from_template(

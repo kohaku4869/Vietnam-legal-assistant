@@ -4,11 +4,6 @@ from langchain_core.documents import Document
 
 
 class Chunker:
-    """
-    Sử dụng phương pháp regex "lookahead" để chia nhỏ văn bản luật theo từng "Điều".
-    Đây là cách mạnh mẽ và đáng tin cậy nhất cho các văn bản có cấu trúc rõ ràng.
-    """
-
     def split(self, documents: List[Document]) -> List[Document]:
         # Gộp nội dung từ tất cả các trang thành một chuỗi văn bản duy nhất
         full_text = "\n".join([doc.page_content for doc in documents])

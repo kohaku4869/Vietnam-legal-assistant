@@ -2,7 +2,6 @@ import os
 import glob
 import re
 from typing import List
-# THAY ĐỔI: Import thư viện mới
 from langchain_community.document_loaders import PyMuPDFLoader
 from langchain_core.documents import Document
 
@@ -21,7 +20,6 @@ class Loader:
         pdf_files = glob.glob(f"{category_path}/*.pdf")
         documents = []
         for pdf_path in pdf_files:
-            # THAY ĐỔI: Sử dụng PyMuPDFLoader
             loader = PyMuPDFLoader(pdf_path)
             for doc in loader.load():
                 # Chúng ta vẫn giữ lại bước dọn dẹp khoảng trắng

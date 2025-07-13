@@ -82,19 +82,16 @@ if prompt := st.chat_input("Đặt câu hỏi của bạn ở đây..."):
                         status.write("Đã xây dựng index...")
                         status.update(label="Xây dựng hoàn tất!", state="complete")
 
-                # BƯỚC 1: PHÂN TÍCH CÂU HỎI
                 queries_generated = multi_query_chain.invoke(prompt)
                 all_queries = [prompt] + queries_generated
                 keywords_extracted = keyword_chain.invoke(prompt)
 
-                # BƯỚC 2: TÌM KIẾM LAI (HYBRID SEARCH)
-                # 2.1. Tìm kiếm ngữ nghĩa
                 semantic_candidates = []
                 for q in all_queries:
                     q_vec = embedder.embed_query(q)
-                    candidates = vector_db.query(q_vec, selected_category, top_k=5)  # Lấy top 5 cho mỗi câu hỏi
+                    candidates = vector_db.query(q_vec, selected_category, top_k=5)
                     semantic_candidates.extend(candidates)
-                # Sàng lọc và chỉ giữ lại khoảng 20 ứng viên ngữ nghĩa tốt nhất
+
                 semantic_candidates = list(dict.fromkeys(semantic_candidates))[:20]
 
                 # 2.2. Tìm kiếm từ khóa
@@ -104,10 +101,9 @@ if prompt := st.chat_input("Đặt câu hỏi của bạn ở đây..."):
                     for text in all_texts:
                         if any(keyword.lower() in text.lower() for keyword in keywords_extracted):
                             keyword_candidates.append(text)
-                # Giới hạn số lượng ứng viên từ khóa để tránh nhiễu
+
                 keyword_candidates = keyword_candidates[:20]
 
-                # BƯỚC 3: TỔNG HỢP VÀ RERANK
                 combined_candidates = list(dict.fromkeys(semantic_candidates + keyword_candidates))
 
                 with st.expander(f"DEBUG: {len(combined_candidates)} ứng viên được đưa vào Reranker"):
@@ -115,7 +111,6 @@ if prompt := st.chat_input("Đặt câu hỏi của bạn ở đây..."):
 
                 reranked_chunks = reranker.rerank(prompt, combined_candidates)[:10]
 
-                # ... (phần còn lại của code giữ nguyên) ...
                 with st.expander("DEBUG: Top 10 nguồn thông tin cuối cùng được sử dụng"):
                     st.json(reranked_chunks)
 
