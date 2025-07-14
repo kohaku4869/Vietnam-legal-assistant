@@ -73,7 +73,7 @@ pip install -r requirements.txt
 Sau khi hoàn tất các bước cài đặt, chạy lệnh sau trong terminal:
 
 ```bash
-streamlit run ui.py
+streamlit run main.py
 ```
 
 Ứng dụng sẽ tự động mở trong trình duyệt của bạn.
@@ -98,5 +98,5 @@ streamlit run ui.py
 ├── vectorstore/        # (Thư mục này sẽ được tự động tạo)
 ├── .env                # File chứa API key (cần tự tạo)
 ├── requirements.txt    # Danh sách các thư viện cần thiết
-└── ui.py               # File để chạy giao diện Streamlit
+└── main.py               # File để chạy giao diện Streamlit
 ```
