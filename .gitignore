@@ -1,7 +1,4 @@
 __pycache__/
 .env
-api/
+/api
 .venv/
-vectorstore/
-.DS_Store
-*.pyc
