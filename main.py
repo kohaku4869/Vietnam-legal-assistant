@@ -13,6 +13,7 @@ from langchain_core.documents import Document
 
 st.set_page_config(page_title="Trợ lý Pháp lý AI", page_icon="⚖️", layout="wide")
 
+
 load_dotenv()
 API_KEY = os.getenv("GOOGLE_API_KEY")
 
