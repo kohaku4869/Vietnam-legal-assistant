@@ -63,11 +63,11 @@ class OfflineRAG:
     def __init__(self, llm):
         self.llm = llm
         self.prompt = PromptTemplate.from_template(
-            """**VAI TRÒ:** Bạn là một Luật sư AI, chuyên tư vấn về Luật Đất đai dựa trên các văn bản pháp luật được cung cấp.
+            """**VAI TRÒ:** Bạn là một Luật sư AI, chuyên tư vấn về Luật dựa trên các văn bản pháp luật được cung cấp.
 
             **NGỮ CẢNH ĐẦU VÀO:**
             1.  **Lịch sử trò chuyện:** {chat_history}
-            2.  **Ngữ cảnh được cung cấp:** Một danh sách các Điều luật trích từ Luật Đất đai.
+            2.  **Ngữ cảnh được cung cấp:** Một danh sách các Điều luật trích từ Luật.
                 <Ngữ cảnh>
                 {context}
                 </Ngữ cảnh>
