@@ -212,7 +212,7 @@ def initialize_rag_pipeline():
     embedder = Embedder()
     vector_db = VectorDB(embedder)
     reranker = Reranker()
-    llm = GoogleLLMPipeline(api_key=GOOGLE_API_KEY, model_name="gemini-1.5-pro")
+    llm = GoogleLLMPipeline(api_key=GOOGLE_API_KEY, model_name="gemini-2.5-flash")
     rag_chain = OfflineRAG(llm=llm)
     multi_query_chain = MultiQueryChain(llm=llm)
     keyword_chain = KeywordExtractionChain(llm=llm)
