@@ -327,7 +327,7 @@ if st.session_state.messages and st.session_state.messages[-1]["role"] == "user"
 
                 # BƯỚC 3: TỔNG HỢP VÀ RERANK
                 combined_candidates = list(dict.fromkeys(semantic_candidates + keyword_candidates))[:40]
-                reranked_chunks = reranker.rerank(last_prompt, combined_candidates, top_n=7)
+                reranked_chunks = reranker.rerank(last_prompt, combined_candidates)[:10]
 
                 reranked_docs = [Document(page_content=txt) for txt in reranked_chunks]
 
