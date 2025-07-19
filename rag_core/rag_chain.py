@@ -105,6 +105,22 @@ class OfflineRAG:
     def invoke(self, docs, question: str, chat_history: list):
         return self.chain.invoke({"context": docs, "question": question, "chat_history": chat_history})
 
+    def stream(self, docs, question: str, chat_history: list):
+        """
+        Xây dựng prompt và gọi phương thức stream của LLM.
+        """
+        # 1. Chuẩn bị dữ liệu đầu vào cho prompt
+        inputs = {
+            "context": self.format_docs(docs),
+            "question": question,
+            "chat_history": self.format_history(chat_history)
+        }
+
+        # 2. Xây dựng prompt hoàn chỉnh
+        full_prompt = self.prompt.format_prompt(**inputs).to_string()
+
+        # 3. Gọi và trả về luồng từ LLM
+        return self.llm.stream(full_prompt)
     def format_docs(self, docs):
         return "\n\n".join(doc.page_content for doc in docs)
 

@@ -9,7 +9,15 @@ class GoogleLLMPipeline:
     def invoke(self, prompt: str) -> str:
         response = self.model.generate_content(prompt, **self.model_kwargs)
         return response.text
-
+    def stream(self, prompt: str):
+        """
+        Trả về một generator yielding các phần của câu trả lời.
+        """
+        response_stream = self.model.generate_content(prompt, **self.model_kwargs, stream=True)
+        for chunk in response_stream:
+            # Bỏ qua các chunk rỗng có thể xuất hiện
+            if chunk.text:
+                yield chunk.text
     def __call__(self, input) -> str:
         if hasattr(input, "to_string"):
             prompt = input.to_string()

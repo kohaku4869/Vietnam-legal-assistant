@@ -191,7 +191,8 @@ CATEGORY_MAP = {
 def load_api_keys():
     load_dotenv()
     # Ưu tiên đọc từ st.secrets khi deploy, nếu không thì dùng .env
-    return st.secrets.get("GOOGLE_API_KEY", os.getenv("GOOGLE_API_KEY"))
+    # return st.secrets.get("GOOGLE_API_KEY", os.getenv("GOOGLE_API_KEY"))
+    return os.getenv("GOOGLE_API_KEY")
 
 
 GOOGLE_API_KEY = load_api_keys()
@@ -333,10 +334,14 @@ if st.session_state.messages and st.session_state.messages[-1]["role"] == "user"
 
                 # BƯỚC 4: TẠO CÂU TRẢ LỜI
                 chat_history_for_prompt = list(st.session_state.messages[:-1])
-                answer = rag_chain.invoke(reranked_docs, last_prompt, chat_history=chat_history_for_prompt)
 
-                st.markdown(answer)
-                st.session_state.messages.append({"role": "assistant", "content": answer, "sources": reranked_chunks})
+                # Gọi phương thức stream mới và hiển thị bằng st.write_stream
+                response_generator = rag_chain.stream(reranked_docs, last_prompt, chat_history=chat_history_for_prompt)
+                full_response = st.write_stream(response_generator)
+
+                # Lưu câu trả lời hoàn chỉnh vào session state sau khi stream kết thúc
+                st.session_state.messages.append(
+                    {"role": "assistant", "content": full_response, "sources": reranked_chunks})
 
             except Exception as e:
                 st.error(f"Đã xảy ra lỗi: {e}")
