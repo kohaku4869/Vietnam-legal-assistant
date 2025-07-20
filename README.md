@@ -18,7 +18,9 @@
 -   **Chế độ Debug:** Tích hợp các mục hiển thị gỡ lỗi ngay trên giao diện, cho phép theo dõi quá trình làm việc nội bộ của hệ thống (các câu hỏi được tạo, từ khóa, các ứng viên được tìm thấy...).
 
 ## 🏗️ Kiến trúc và Công nghệ
+Sơ đồ dưới đây minh họa kiến trúc tổng thể của hệ thống:
 
+![Sơ đồ kiến trúc hệ thống RAG](system_architecture.png)
 -   **Ngôn ngữ chính:** Python
 -   **Giao diện người dùng (UI):** Streamlit
 -   **Mô hình ngôn ngữ lớn (LLM):** Google Gemini (`gemini-1.5-pro` hoặc `gemini-1.5-flash`)
