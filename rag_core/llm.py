@@ -10,9 +10,6 @@ class GoogleLLMPipeline:
         response = self.model.generate_content(prompt, **self.model_kwargs)
         return response.text
     def stream(self, prompt: str):
-        """
-        Trả về một generator yielding các phần của câu trả lời.
-        """
         response_stream = self.model.generate_content(prompt, **self.model_kwargs, stream=True)
         for chunk in response_stream:
             # Bỏ qua các chunk rỗng có thể xuất hiện

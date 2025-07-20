@@ -8,12 +8,6 @@ from langchain_core.documents import Document
 
 class VectorDB:
     def __init__(self, embedding, persist_dir: str = "vectorstore"):
-        """Quản lý vector stores và truy xuất tài liệu sử dụng FAISS.
-
-        Args:
-            embedding: Đối tượng có phương thức .embed_documents() và .embed_query().
-            persist_dir (str): Thư mục lưu trữ vector stores (mặc định: 'vectorstore').
-        """
         self.persist_dir = persist_dir
         os.makedirs(persist_dir, exist_ok=True)
         self.embedding = embedding
