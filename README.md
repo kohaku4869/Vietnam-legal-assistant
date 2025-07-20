@@ -20,7 +20,7 @@
 ## 🏗️ Kiến trúc và Công nghệ
 Sơ đồ dưới đây minh họa kiến trúc tổng thể của hệ thống:
 
-![Sơ đồ kiến trúc hệ thống RAG](system_architecture.png)
+![Sơ đồ kiến trúc hệ thống RAG](system_architecture(1).png)
 -   **Ngôn ngữ chính:** Python
 -   **Giao diện người dùng (UI):** Streamlit
 -   **Mô hình ngôn ngữ lớn (LLM):** Google Gemini (`gemini-1.5-pro` hoặc `gemini-1.5-flash`)
